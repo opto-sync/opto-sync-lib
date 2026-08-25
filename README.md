@@ -5,8 +5,25 @@ engine boundary.
 
 ## Status
 
-Bootstrap repository. Publication is disabled until the interfaces repository
-is authoritative and a real resolver produces immutable dependency locks.
+Implemented policy library; publication remains disabled pending differential
+trace replay in downstream runtimes. The Rust crate consumes
+`opto-sync-interfaces` at immutable commit
+`b92b3a2eb43eeb183144521a188ae465a013951e` and deliberately has no dependency
+on `syncer.c` or `syncer.rs`.
+
+## Implemented surface
+
+- `decide` is the deterministic state-machine authority for remote-confirmed,
+  local-acknowledged, and background-durable writes.
+- `RetryPolicy` supplies bounded full-jitter delays from caller-provided
+  entropy and makes exhaustion explicit.
+- `CheckpointLedger` enforces monotonic checkpoints and bounded operation-ID
+  de-duplication.
+- `MergeCapability` lets a final application supply exactly one reviewed
+  `syncer.c` or `syncer.rs` engine; `replay_pending` never installs another.
+- `formal/optimism-strategies.json` is the machine-readable decision table and
+  `formal/traces.v1.json` covers success, retry, duplicate outcome,
+  cancellation, offline queueing, and reconnect.
 
 ## Ownership boundary
 
@@ -35,16 +52,17 @@ in `opto-sync-clients` and consume the policies defined here.
 `opto-sync-lib` depends on `opto-sync-interfaces` only. Engine integration is an
 explicit host-supplied capability, never an implicit second installation.
 
-## First implementation gates
+## Validation
 
-- Import reviewed state-machine specifications with exact provenance and
-  preserve their temporal properties.
-- Define the optimism-strategy decision table and observable ordering contract.
-- Model retries, crashes, reconnects, duplicate delivery, and cancellation with
-  bounded formal configurations.
-- Run the same generated traces against TypeScript/RxJS, Dart/RxDart, Rust, and
-  mobile lifecycle adapters.
-- Reject dependency graphs that contain both a Zed-resolved engine and a pinned
-  gitlink for the same logical engine revision.
-- Keep all publication targets disabled until clean-room consumers prove
-  deterministic packaging and runtime behavior.
+```sh
+python3 scripts/verify_policy.py
+cargo fmt --all -- --check
+cargo test --all-targets --locked
+cargo clippy --all-targets --locked -- -D warnings
+```
+
+The Rust tests exhaustively close terminal states, replay every committed
+trace, prove checkpoint monotonicity and duplicate idempotence, bound retry
+delays, and exercise host-supplied merge replay. Publication remains disabled
+until TypeScript/RxJS, Dart/RxDart, and mobile lifecycle adapters replay the
+same traces in their owning repositories.

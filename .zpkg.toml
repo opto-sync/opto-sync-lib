@@ -1,0 +1,20 @@
+[package]
+org = "opto-sync"
+name = "opto-sync-lib"
+version = "0.1.0"
+description = "Runtime-neutral Opto Sync lifecycle and optimism policy"
+license = "MIT"
+
+[package.repository]
+vcs = "git"
+url = "https://github.com/opto-sync/opto-sync-lib"
+
+[dependencies]
+"opto-sync/opto-sync-interfaces" = "^0.1.0"
+
+[targets.rust]
+dir = "."
+adapter = "rust"
+
+[publish]
+enabled = false

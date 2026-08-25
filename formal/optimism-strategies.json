@@ -1,0 +1,86 @@
+{
+  "schema": "opto-sync.optimism-strategies.v1",
+  "states": [
+    "proposed",
+    "locally_applied",
+    "durably_queued",
+    "in_flight",
+    "backoff",
+    "confirmed",
+    "rejected",
+    "cancelled"
+  ],
+  "strategies": {
+    "remote_confirmed": {
+      "acknowledgement": "remote_applied",
+      "localObservationBeforeRemote": false,
+      "initialStateAfterAcceptance": "in_flight",
+      "initialEffect": "dispatch"
+    },
+    "local_acknowledged": {
+      "acknowledgement": "local_acceptance",
+      "localObservationBeforeRemote": true,
+      "initialStateAfterAcceptance": "locally_applied",
+      "initialEffect": "persist_and_dispatch"
+    },
+    "background_durable": {
+      "acknowledgement": "durable_local_queue",
+      "localObservationBeforeRemote": true,
+      "initialStateAfterAcceptance": "durably_queued",
+      "initialEffect": "persist_for_background_dispatch"
+    }
+  },
+  "commonTransitions": [
+    {
+      "from": ["locally_applied", "durably_queued"],
+      "event": "dispatch_started",
+      "to": "in_flight",
+      "effect": "dispatch"
+    },
+    {
+      "from": ["in_flight"],
+      "event": "connectivity_lost",
+      "to": "durably_queued",
+      "effect": "wait_for_connectivity"
+    },
+    {
+      "from": ["durably_queued"],
+      "event": "connectivity_restored",
+      "to": "durably_queued",
+      "effect": "dispatch"
+    },
+    {
+      "from": ["in_flight"],
+      "event": "retryable_failure",
+      "to": "backoff",
+      "effect": "schedule_retry"
+    },
+    {
+      "from": ["backoff"],
+      "event": "retry_elapsed",
+      "to": "in_flight",
+      "effect": "dispatch"
+    },
+    {
+      "from": ["in_flight"],
+      "event": "remote_applied",
+      "to": "confirmed",
+      "observation": "confirmed_value",
+      "effect": "stop"
+    },
+    {
+      "from": ["in_flight"],
+      "event": "remote_rejected",
+      "to": "rejected",
+      "observation": "rejection",
+      "effect": "stop"
+    }
+  ],
+  "invariants": [
+    "terminal states never transition to a different state",
+    "duplicate remote outcomes are idempotent",
+    "only background_durable acknowledges a write at durable queue admission",
+    "a retry never changes mutation identity",
+    "checkpoints never regress"
+  ]
+}
