@@ -95,21 +95,26 @@ fn retry_delay_is_bounded_and_exhaustion_is_explicit() {
 }
 
 #[test]
-fn checkpoints_are_monotonic_and_operation_ids_are_idempotent() {
-    let mut ledger = CheckpointLedger::new("0", 2).unwrap();
+fn checkpoints_are_monotonic_idempotent_and_immutable() {
+    let initial = CheckpointLedger::new("0", 2).unwrap();
+    let (advanced, decision) = initial.observe("operation-a", "1").unwrap();
+    assert_eq!(decision, CheckpointDecision::Advanced);
+
+    // A policy transition creates a new ledger instead of mutating caller-owned
+    // state; callers can safely keep the prior snapshot for replay/debugging.
+    assert_eq!(initial.checkpoint(), "0");
+    assert_eq!(advanced.checkpoint(), "1");
+
+    let (duplicate, decision) = advanced.observe("operation-a", "1").unwrap();
+    assert_eq!(decision, CheckpointDecision::Duplicate);
+    assert_eq!(duplicate, advanced);
+    assert_eq!(advanced.checkpoint(), "1");
+
     assert_eq!(
-        ledger.observe("operation-a", "1").unwrap(),
-        CheckpointDecision::Advanced
-    );
-    assert_eq!(
-        ledger.observe("operation-a", "1").unwrap(),
-        CheckpointDecision::Duplicate
-    );
-    assert_eq!(
-        ledger.observe("operation-b", "0"),
+        advanced.observe("operation-b", "0"),
         Err(PolicyError::CheckpointRegressed)
     );
-    assert_eq!(ledger.checkpoint(), "1");
+    assert_eq!(advanced.checkpoint(), "1");
 }
 
 struct LastIntentWins;
