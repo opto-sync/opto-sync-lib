@@ -334,14 +334,13 @@ where
     C: MergeCapability,
     I: IntoIterator<Item = &'a str>,
 {
-    pending_oldest_first.into_iter().try_fold(
-        authoritative.to_owned(),
-        |view, pending| {
+    pending_oldest_first
+        .into_iter()
+        .try_fold(authoritative.to_owned(), |view, pending| {
             capability
                 .merge(&view, pending)
                 .map_err(|_| PolicyError::MergeFailed)
-        },
-    )
+        })
 }
 
 fn parse_decimal(value: &str) -> Result<u64, PolicyError> {
