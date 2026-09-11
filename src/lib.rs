@@ -270,15 +270,21 @@ impl CheckpointLedger {
         self.checkpoint.to_string()
     }
 
+    /// Return the next immutable checkpoint snapshot and the observation made.
+    ///
+    /// The current ledger is never mutated. Even duplicate observations rebuild
+    /// the owned operation-id set so the returned snapshot does not share
+    /// mutable collection storage with its input.
     pub fn observe(
-        &mut self,
+        &self,
         operation_id: &str,
         checkpoint: &str,
-    ) -> Result<CheckpointDecision, PolicyError> {
+    ) -> Result<(Self, CheckpointDecision), PolicyError> {
         validate_operation_id(operation_id)?;
         let checkpoint = parse_decimal(checkpoint)?;
+
         if self.seen_operation_ids.contains(operation_id) {
-            return Ok(CheckpointDecision::Duplicate);
+            return Ok((self.rebuild(), CheckpointDecision::Duplicate));
         }
         if checkpoint < self.checkpoint {
             return Err(PolicyError::CheckpointRegressed);
@@ -286,9 +292,30 @@ impl CheckpointLedger {
         if self.seen_operation_ids.len() >= self.maximum_seen_operations {
             return Err(PolicyError::DeduplicationWindowFull);
         }
-        self.seen_operation_ids.insert(operation_id.to_owned());
-        self.checkpoint = checkpoint;
-        Ok(CheckpointDecision::Advanced)
+
+        let seen_operation_ids = self
+            .seen_operation_ids
+            .iter()
+            .cloned()
+            .chain(std::iter::once(operation_id.to_owned()))
+            .collect();
+
+        Ok((
+            Self {
+                checkpoint,
+                seen_operation_ids,
+                maximum_seen_operations: self.maximum_seen_operations,
+            },
+            CheckpointDecision::Advanced,
+        ))
+    }
+
+    fn rebuild(&self) -> Self {
+        Self {
+            checkpoint: self.checkpoint,
+            seen_operation_ids: self.seen_operation_ids.iter().cloned().collect(),
+            maximum_seen_operations: self.maximum_seen_operations,
+        }
     }
 }
 
@@ -307,13 +334,13 @@ where
     C: MergeCapability,
     I: IntoIterator<Item = &'a str>,
 {
-    let mut view = authoritative.to_owned();
-    for pending in pending_oldest_first {
-        view = capability
-            .merge(&view, pending)
-            .map_err(|_| PolicyError::MergeFailed)?;
-    }
-    Ok(view)
+    pending_oldest_first
+        .into_iter()
+        .try_fold(authoritative.to_owned(), |view, pending| {
+            capability
+                .merge(&view, pending)
+                .map_err(|_| PolicyError::MergeFailed)
+        })
 }
 
 fn parse_decimal(value: &str) -> Result<u64, PolicyError> {
