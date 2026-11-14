@@ -1,4 +1,4 @@
-use opto_sync_lib::{checkpoint_batch::MAX_BATCH_OBSERVATIONS, CheckpointDecision, CheckpointLedger, PolicyError};
+use opto_sync_lib::{MAX_BATCH_OBSERVATIONS, CheckpointDecision, CheckpointLedger, PolicyError};
 
 #[test]
 fn batch_admits_monotonic_operations_in_input_order() {
