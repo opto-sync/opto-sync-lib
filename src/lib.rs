@@ -5,6 +5,8 @@
 //! behavior is supplied by the host through [`MergeCapability`], ensuring a
 //! final composition resolves exactly one `syncer.c` or `syncer.rs` engine.
 
+mod checkpoint_batch;
+
 use std::collections::BTreeSet;
 
 pub use opto_sync_interfaces as interfaces;
