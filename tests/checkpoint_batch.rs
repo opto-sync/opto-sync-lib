@@ -85,9 +85,7 @@ fn repeated_ids_are_bounded_even_when_the_unique_id_window_is_not_exhausted() {
     assert_eq!(initial.checkpoint(), "0");
 
     assert_eq!(
-        initial.observe_batch(
-            std::iter::repeat(("op-a", "1")).take(MAX_BATCH_OBSERVATIONS + 1)
-        ),
+        initial.observe_batch(std::iter::repeat(("op-a", "1")).take(MAX_BATCH_OBSERVATIONS + 1)),
         Err(PolicyError::DeduplicationWindowFull)
     );
 }
