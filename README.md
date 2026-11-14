@@ -21,6 +21,10 @@ on `syncer.c` or `syncer.rs`.
   de-duplication.
 - `CheckpointLedger::observe_batch` atomically validates ordered batches,
   preserving input order, duplicate semantics, and the original ledger on failure.
+  The policy caps **total** observations at `MAX_BATCH_OBSERVATIONS = 1_024`,
+  including repeated operation IDs. Oversized or non-terminating input iterators
+  fail with `DeduplicationWindowFull` without exposing partial results. This
+  retains the existing error enum while closing duplicate-only memory growth.
 - `MergeCapability` lets a final application supply exactly one reviewed
   `syncer.c` or `syncer.rs` engine; `replay_pending` never installs another.
 - `formal/optimism-strategies.json` is the machine-readable decision table and
