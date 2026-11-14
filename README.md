@@ -19,6 +19,8 @@ on `syncer.c` or `syncer.rs`.
   entropy and makes exhaustion explicit.
 - `CheckpointLedger` enforces monotonic checkpoints and bounded operation-ID
   de-duplication.
+- `CheckpointLedger::observe_batch` atomically validates ordered batches,
+  preserving input order, duplicate semantics, and the original ledger on failure.
 - `MergeCapability` lets a final application supply exactly one reviewed
   `syncer.c` or `syncer.rs` engine; `replay_pending` never installs another.
 - `formal/optimism-strategies.json` is the machine-readable decision table and
