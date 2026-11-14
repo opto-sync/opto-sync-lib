@@ -7,6 +7,8 @@
 
 mod checkpoint_batch;
 
+pub use checkpoint_batch::MAX_BATCH_OBSERVATIONS;
+
 use std::collections::BTreeSet;
 
 pub use opto_sync_interfaces as interfaces;
