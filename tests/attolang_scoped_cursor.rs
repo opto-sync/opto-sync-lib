@@ -1,6 +1,4 @@
-use opto_sync_lib::scoped_cursor::{
-    can_apply_change, can_resume, can_rotate, ATTO_SIGNED_MAX,
-};
+use opto_sync_lib::scoped_cursor::{can_apply_change, can_resume, can_rotate, ATTO_SIGNED_MAX};
 
 #[test]
 fn bounded_scoped_change_cases_require_exact_cursor_and_verified_scope() {
@@ -58,15 +56,36 @@ fn resume_and_rotation_require_committed_scoped_evidence() {
 #[test]
 fn signed_i64_edges_never_wrap_or_promote_impossible_generation() {
     assert!(can_apply_change(
-        1, 1, ATTO_SIGNED_MAX - 1, ATTO_SIGNED_MAX - 1, ATTO_SIGNED_MAX, true, true,
+        1,
+        1,
+        ATTO_SIGNED_MAX - 1,
+        ATTO_SIGNED_MAX - 1,
+        ATTO_SIGNED_MAX,
+        true,
+        true,
     ));
     assert!(!can_apply_change(
-        1, 1, ATTO_SIGNED_MAX, ATTO_SIGNED_MAX, ATTO_SIGNED_MAX + 1, true, true,
+        1,
+        1,
+        ATTO_SIGNED_MAX,
+        ATTO_SIGNED_MAX,
+        ATTO_SIGNED_MAX + 1,
+        true,
+        true,
     ));
     assert!(!can_resume(
-        ATTO_SIGNED_MAX + 1, ATTO_SIGNED_MAX + 1, 0, 0, true, true,
+        ATTO_SIGNED_MAX + 1,
+        ATTO_SIGNED_MAX + 1,
+        0,
+        0,
+        true,
+        true,
     ));
     assert!(!can_rotate(
-        ATTO_SIGNED_MAX, ATTO_SIGNED_MAX + 1, 0, true, true,
+        ATTO_SIGNED_MAX,
+        ATTO_SIGNED_MAX + 1,
+        0,
+        true,
+        true,
     ));
 }
