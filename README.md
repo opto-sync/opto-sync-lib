@@ -72,3 +72,7 @@ trace, prove checkpoint monotonicity and duplicate idempotence, bound retry
 delays, and exercise host-supplied merge replay. Publication remains disabled
 until TypeScript/RxJS, Dart/RxDart, and mobile lifecycle adapters replay the
 same traces in their owning repositories.
+
+## Experimental AttoLang scoped cursor refinement
+
+The additive scoped_cursor module exposes pure can_resume, can_apply_change, and can_rotate guards. This is a Rust reference for the future AttoLang guest policy, not an authenticated transport or storage authority. Scope and durable-commit booleans must come from trusted host evidence. Filtered delta streams may skip unrelated revisions, but must chain from the exact local checkpoint. The signed-i64 guards and adversarial model are tested with cargo test --locked --test attolang_scoped_cursor. AttoLang compilation, actual remote server fencing, and multi-backend parity remain NOT EXECUTED / NOT CERTIFIED.
