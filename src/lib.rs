@@ -6,6 +6,7 @@
 //! final composition resolves exactly one `syncer.c` or `syncer.rs` engine.
 
 mod checkpoint_batch;
+pub mod scoped_cursor;
 
 pub use checkpoint_batch::MAX_BATCH_OBSERVATIONS;
 
